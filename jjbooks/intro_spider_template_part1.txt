@@ -1,0 +1,9 @@
+# -*- coding: utf-8 -*-
+import scrapy
+from .. items import BookInfo
+
+
+class IntroSpider(scrapy.Spider):
+    name = 'intro'
+    allowed_domains = ['jjwxc.net']
+    start_urls = ['http://www.jjwxc.net/onebook.php?novelid=
