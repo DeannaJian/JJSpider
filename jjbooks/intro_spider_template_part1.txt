@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from .. items import BookInfo
+from selenium import webdriver
+from lxml import etree
+import re
+from selenium.webdriver.chrome.options import Options
 
 
 class IntroSpider(scrapy.Spider):
     name = 'intro'
-    allowed_domains = ['jjwxc.net']
-    start_urls = ['http://www.jjwxc.net/onebook.php?novelid=
+    allowed_domains = ['wap.jjwxc.net']
+    start_urls = ['https://wap.jjwxc.net/book2/

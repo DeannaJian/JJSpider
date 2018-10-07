@@ -4,6 +4,36 @@ import time
 import os
 import sys
 import xml.etree.ElementTree as ET
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+import pickle
+
+
+def login_and_get_cookie(username, password):
+    chrome_options = Options()
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--disable-gpu')
+    driver = webdriver.Chrome(chrome_options=chrome_options)
+
+    driver.get('https://wap.jjwxc.net/my/login?login_mode=jjwxc')
+    usr = driver.find_element_by_xpath("//*[@id='loginname']")
+    usr.clear()
+    usr.send_keys(username)
+    psw = driver.find_element_by_xpath("//*[@id='loginpass']")
+    psw.send_keys(password)
+    sub = driver.find_element_by_xpath("//*[@name='sub']")
+    sub.click()
+
+    new_cookie = {}
+    for item in driver.get_cookies():
+        new_cookie.setdefault(
+            item["name"].encode('utf-8'),
+            item["value"].encode('utf-8'))
+
+    driver.close()
+
+    with open('current_cookie.pkl', 'w') as ff:
+        pickle.dump(new_cookie, ff)
 
 
 def sort_children(parent, attr):
@@ -38,27 +68,45 @@ def output_txt_from_content_xml(input, output):
                     para_content = para_content
                     ff.write(para_content.encode("GBK") + "\n")
             ff.write("\n")
-            talk = root.find('.//item[%d]/talk' % order[str(ii)]).text
-            if talk != "None":
-                ff.write(talk.encode("GBK") + "\n\n")
+            talk_list = root.find('.//item[%d]/talk' % order[str(ii)])
+            for paragraph in talk_list:
+                para_content = paragraph.text
+                if para_content is not None:
+                    ff.write(para_content.encode("GBK") + "\n")
+            ff.write("\n")
+
+
+def get_author_title_from_intro_xml(input):
+    tree = ET.parse(input)
+    root = tree.getroot()
+
+    title = root.find('.//book_title').text
+    author = root.find('.//author').text
+    return title, author
+
+
+def get_txt_filename(input):
+    title, author = get_author_title_from_intro_xml(input)
+    output_filename = u"《" + title + u"》_" + author + '.txt'
+    return output_filename
 
 
 def output_txt_from_intro_xml(input, output):
+    title, author = get_author_title_from_intro_xml(input)
+
     tree = ET.parse(input)
     root = tree.getroot()
 
     with open(output, 'w') as ff:
-        title = root.find('.//book_title').text
         line = u"《" + title + u"》\n\n"
         ff.write(line.encode("GBK"))
-        author = root.find('.//author').text
         line = u"作者：" + author + "\n\n"
         ff.write(line.encode("GBK"))
         line = u"文案：\n"
         ff.write(line.encode("GBK"))
         value_list = root.findall('.//item/short_intro/value')
         for value in value_list:
-            line = "    " + value.text
+            line = value.text
             if line is not None:
                 ff.write(line.encode("GBK") + "\n")
         ff.write("\n")
@@ -94,15 +142,13 @@ def modify_spider(book_number):
         "intro_spider_template_part2.txt", intro_spider_path, "a")
 
 
-if (__name__ == "__main__"):
-    # usage: python get.py 3141967
-    # https://wap.jjwxc.net/book2/3435320?more=0&whole=1
-    # print "Book number: %s" % sys.argv[1]
-    book_number = sys.argv[1]
+def get_book(book_number, output_folder, refresh_cookie, username, password):
     modify_spider(book_number)
 
+    if refresh_cookie:
+        login_and_get_cookie(username, password)
+
     tt = time.localtime()
-    txt_filename = "output%s.txt" % time.strftime("%m%d", tt)
     intro_filename = "intro%s.xml" % time.strftime("%m%d", tt)
     content_filename = "test%s.xml" % time.strftime("%m%d", tt)
 
@@ -117,5 +163,23 @@ if (__name__ == "__main__"):
     cmd = "scrapy crawl book -o %s --nolog" % content_filename
     subprocess.call(cmd)
 
+    txt_filename = output_folder + "\\" + get_txt_filename(intro_filename)
+
     output_txt_from_intro_xml(intro_filename, txt_filename)
     output_txt_from_content_xml(content_filename, txt_filename)
+
+    os.remove(intro_filename)
+    os.remove(content_filename)
+
+
+if (__name__ == "__main__"):
+    # usage: python get.py 3141967
+    # if cookie has to be refresh, use: python get.py 3141967 username passwd
+    # https://wap.jjwxc.net/book2/3435320?more=0&whole=1
+    # print "Book number: %s" % sys.argv[1]
+    number = sys.argv[1]
+
+    if len(sys.argv) == 4:
+        get_book(number, "F:\\temp", True, sys.argv[3], sys.argv[4])
+    else:
+        get_book(number, "F:\\temp", False, "dummy", "dummy")

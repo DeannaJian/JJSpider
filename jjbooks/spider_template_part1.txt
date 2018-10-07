@@ -5,6 +5,12 @@ from .. items import ChapterItem
 
 
 class BookSpider(scrapy.Spider):
+    import pickle
+
+    with open('current_cookie.pkl', 'r') as ff:
+        cookie = {}
+        cookie = pickle.load(ff)
+
     name = 'book'
     allowed_domains = ['wap.jjwxc.net']
     start_urls = ['https://wap.jjwxc.net/book2/
