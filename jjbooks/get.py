@@ -16,6 +16,7 @@ def login_and_get_cookie(username, password):
     driver = webdriver.Chrome(chrome_options=chrome_options)
 
     driver.get('https://wap.jjwxc.net/my/login?login_mode=jjwxc')
+    driver.implicitly_wait(10)
     usr = driver.find_element_by_xpath("//*[@id='loginname']")
     usr.clear()
     usr.send_keys(username)
@@ -40,8 +41,8 @@ def sort_children(parent, attr):
     parent[:] = sorted(parent, key=lambda child: child.get(attr))
 
 
-def output_txt_from_content_xml(input, output):
-    tree = ET.parse(input)
+def output_txt_from_content_xml(input_file, output_file):
+    tree = ET.parse(input_file)
     root = tree.getroot()
 
     item_num = 1
@@ -55,7 +56,7 @@ def output_txt_from_content_xml(input, output):
             order[item_index] = item_num
             item_num += 1
 
-    with open(output, 'a') as ff:
+    with open(output_file, 'a') as ff:
         for ii in range(1, item_num):
             ff.write("\n")
             title = root.find('.//item[%d]/title' % order[str(ii)]).text
@@ -76,8 +77,8 @@ def output_txt_from_content_xml(input, output):
             ff.write("\n")
 
 
-def get_author_title_from_intro_xml(input):
-    tree = ET.parse(input)
+def get_author_title_from_intro_xml(input_file):
+    tree = ET.parse(input_file)
     root = tree.getroot()
 
     title = root.find('.//book_title').text
@@ -85,19 +86,19 @@ def get_author_title_from_intro_xml(input):
     return title, author
 
 
-def get_txt_filename(input):
-    title, author = get_author_title_from_intro_xml(input)
+def get_txt_filename(intro_file):
+    title, author = get_author_title_from_intro_xml(intro_file)
     output_filename = u"《" + title + u"》_" + author + '.txt'
     return output_filename
 
 
-def output_txt_from_intro_xml(input, output):
-    title, author = get_author_title_from_intro_xml(input)
+def output_txt_from_intro_xml(input_file, output_file):
+    title, author = get_author_title_from_intro_xml(input_file)
 
-    tree = ET.parse(input)
+    tree = ET.parse(input_file)
     root = tree.getroot()
 
-    with open(output, 'w') as ff:
+    with open(output_file, 'w') as ff:
         line = u"《" + title + u"》\n\n"
         ff.write(line.encode("GBK"))
         line = u"作者：" + author + "\n\n"
@@ -110,6 +111,15 @@ def output_txt_from_intro_xml(input, output):
             if line is not None:
                 ff.write(line.encode("GBK") + "\n")
         ff.write("\n")
+
+
+def output_txt(input_file, output_file, output_type):
+    assert(output_type in ("intro", "content"))
+
+    if output_type == "intro":
+        output_txt_from_intro_xml(input_file, output_file)
+    else:
+        output_txt_from_content_xml(input_file, output_file)
 
 
 def copy_template_to_spider(template, spider, mode):
@@ -127,49 +137,85 @@ def add_book_num_to_spider(spider, book_number):
         ff.write(book_number)
 
 
-def modify_spider(book_number):
-    spider_path = "jjbooks/spiders/book.py"
+def modify_spider(book_number, spider_type):
+    assert(spider_type in ("intro", "content"))
 
-    copy_template_to_spider("spider_template_part1.txt", spider_path, "w")
+    spider_path = "jjbooks/spiders/intro.py" if (spider_type == "intro") \
+        else "jjbooks/spiders/book.py"
+    template_name = "intro_spider_template_part" if (spider_type == "intro") \
+        else "spider_template_part"
+
+    copy_template_to_spider(template_name + "1.txt", spider_path, "w")
     add_book_num_to_spider(spider_path, book_number)
-    copy_template_to_spider("spider_template_part2.txt", spider_path, "a")
+    copy_template_to_spider(template_name + "2.txt", spider_path, "a")
 
-    intro_spider_path = "jjbooks/spiders/intro.py"
-    copy_template_to_spider(
-        "intro_spider_template_part1.txt", intro_spider_path, "w")
-    add_book_num_to_spider(intro_spider_path, book_number)
-    copy_template_to_spider(
-        "intro_spider_template_part2.txt", intro_spider_path, "a")
+
+def get_intro(book_number, output_folder, txt_filename):
+    modify_spider(book_number, "intro")
+
+    tt = time.localtime()
+    temp_filename = "temp_output%s.xml" % time.strftime("%m%d", tt)
+
+    if os.path.exists(temp_filename):
+        os.remove(temp_filename)
+
+    cmd = "scrapy crawl intro -o %s --nolog" % temp_filename
+    subprocess.call(cmd)
+
+    txt_filename = output_folder + "\\" + get_txt_filename(temp_filename)
+    output_txt_from_intro_xml(temp_filename, txt_filename)
+    os.remove(temp_filename)
+
+    return txt_filename
+
+
+def get_content(book_number, output_folder, txt_filename):
+    modify_spider(book_number, "content")
+
+    tt = time.localtime()
+    temp_filename = "temp_output%s.xml" % time.strftime("%m%d", tt)
+
+    if os.path.exists(temp_filename):
+        os.remove(temp_filename)
+
+    cmd = "scrapy crawl book -o %s --nolog" % temp_filename
+    subprocess.call(cmd)
+
+    output_txt_from_content_xml(temp_filename, txt_filename)
+    os.remove(temp_filename)
+
+
+def get_book_part(book_number, output_folder, output_type, txt_filename):
+    assert(output_type in ("intro", "content"))
+    modify_spider(book_number, output_type)
+    spider_name = "intro" if (output_type == "intro") else "book"
+
+    tt = time.localtime()
+    temp_filename = "temp_output%s.xml" % time.strftime("%m%d", tt)
+
+    if os.path.exists(temp_filename):
+        os.remove(temp_filename)
+
+    cmd = "scrapy crawl %s -o %s --nolog" % (spider_name, temp_filename)
+    subprocess.call(cmd)
+
+    if (output_type == "intro"):
+        txt_filename = output_folder + "\\" + get_txt_filename(temp_filename)
+        output_txt_from_intro_xml(temp_filename, txt_filename)
+    else:
+        output_txt_from_content_xml(temp_filename, txt_filename)
+
+    os.remove(temp_filename)
+
+    return txt_filename
 
 
 def get_book(book_number, output_folder, refresh_cookie, username, password):
-    modify_spider(book_number)
-
     if refresh_cookie:
         login_and_get_cookie(username, password)
 
-    tt = time.localtime()
-    intro_filename = "intro%s.xml" % time.strftime("%m%d", tt)
-    content_filename = "test%s.xml" % time.strftime("%m%d", tt)
-
-    if os.path.exists(intro_filename):
-        os.remove(intro_filename)
-
-    if os.path.exists(content_filename):
-        os.remove(content_filename)
-
-    cmd = "scrapy crawl intro -o %s --nolog" % intro_filename
-    subprocess.call(cmd)
-    cmd = "scrapy crawl book -o %s --nolog" % content_filename
-    subprocess.call(cmd)
-
-    txt_filename = output_folder + "\\" + get_txt_filename(intro_filename)
-
-    output_txt_from_intro_xml(intro_filename, txt_filename)
-    output_txt_from_content_xml(content_filename, txt_filename)
-
-    os.remove(intro_filename)
-    os.remove(content_filename)
+    txt_filename = get_book_part(book_number, output_folder, "intro", "")
+    get_book_part(book_number, output_folder, "content", txt_filename)
 
 
 if (__name__ == "__main__"):
@@ -180,6 +226,6 @@ if (__name__ == "__main__"):
     number = sys.argv[1]
 
     if len(sys.argv) == 4:
-        get_book(number, "F:\\temp", True, sys.argv[3], sys.argv[4])
+        get_book(number, "F:\\temp", True, sys.argv[2], sys.argv[3])
     else:
         get_book(number, "F:\\temp", False, "dummy", "dummy")
