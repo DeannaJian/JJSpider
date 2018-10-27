@@ -47,6 +47,9 @@ class frame1 ( wx.Frame ):
 		self.m_dirPicker1 = wx.DirPickerCtrl( self, wx.ID_ANY, wx.EmptyString, u"Select a folder", wx.DefaultPosition, wx.DefaultSize, wx.DIRP_DEFAULT_STYLE )
 		bSizer5.Add( self.m_dirPicker1, 3, wx.ALL, 5 )
 		
+		self.m_buttonOpenDir = wx.Button( self, wx.ID_ANY, u"打开", wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer5.Add( self.m_buttonOpenDir, 0, wx.ALL, 5 )
+		
 		
 		bSizer1.Add( bSizer5, 1, wx.EXPAND, 5 )
 		
@@ -92,6 +95,7 @@ class frame1 ( wx.Frame ):
 		
 		# Connect Events
 		self.m_dirPicker1.Bind( wx.EVT_DIRPICKER_CHANGED, self.update_output_dir )
+		self.m_buttonOpenDir.Bind( wx.EVT_BUTTON, self.open_output_dir )
 		self.m_checkBoxRelogin.Bind( wx.EVT_CHECKBOX, self.enable_relogin )
 		self.m_buttonGetBook.Bind( wx.EVT_BUTTON, self.begin_get_book )
 	
@@ -103,8 +107,13 @@ class frame1 ( wx.Frame ):
 	def update_output_dir( self, event ):
 		event.Skip()
 	
+	def open_output_dir( self, event ):
+		event.Skip()
+	
 	def enable_relogin( self, event ):
 		event.Skip()
 	
 	def begin_get_book( self, event ):
 		event.Skip()
+	
+

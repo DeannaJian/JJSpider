@@ -1,11 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Last modified: Sep. 26, 2018
+# Last modified: Oct. 27, 2018
 #
 import wx
 import GetBookGui
 from get import *
+import os
 
 
 class GetBookDialog(GetBookGui.frame1):
@@ -26,6 +27,11 @@ class GetBookDialog(GetBookGui.frame1):
         book_number = pattern.findall(url)[0]
         return book_number
 
+    def open_output_dir(self, event):
+        output_folder = self.m_dirPicker1.GetPath()
+        if os.path.exists(output_folder):
+            os.startfile(output_folder)
+
     def begin_get_book(self, event):
         self.m_statusBar1.SetStatusText("开始取书")
         url = self.m_textCtrlNovelURL.GetValue()
@@ -33,7 +39,15 @@ class GetBookDialog(GetBookGui.frame1):
         output_folder = self.m_dirPicker1.GetPath()
         username = self.m_textCtrlUsername.GetValue()
         password = self.m_textCtrlPasswd.GetValue()
-        get_book(book_number, output_folder, self.relogin, username, password)
+
+        if self.relogin:
+            self.m_statusBar1.SetStatusText("登陆")
+            login_and_get_cookie(username, password)
+
+        self.m_statusBar1.SetStatusText("获取文案")
+        txt_filename = get_book_part(book_number, output_folder, "intro", "")
+        self.m_statusBar1.SetStatusText("获取章节")
+        get_book_part(book_number, output_folder, "content", txt_filename)
         self.m_statusBar1.SetStatusText("完成")
 
 
