@@ -1,2 +1,2 @@
 # JJSpider
-A spider to grab free content from JJ
+A spider to grab novel from JJWXC
