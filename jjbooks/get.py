@@ -86,8 +86,16 @@ def get_author_title_from_intro_xml(input_file):
     return title, author
 
 
+def standardized_filename(filename):
+    forbidden_character = ('\\', '/', ':', '*', '?', '"', '<', '>', '|')
+    for cc in forbidden_character:
+        filename = filename.replace(cc, ' ')
+    return filename
+
+
 def get_txt_filename(intro_file):
     title, author = get_author_title_from_intro_xml(intro_file)
+    title = standardized_filename(title)
     output_filename = u"《" + title + u"》_" + author + '.txt'
     return output_filename
 
