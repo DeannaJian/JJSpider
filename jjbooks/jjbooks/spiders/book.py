@@ -2,37 +2,38 @@
 import scrapy
 from scrapy.linkextractors import LinkExtractor
 from .. items import ChapterItem
-from scrapy.conf import settings
 
 
 class BookSpider(scrapy.Spider):
+    import pickle
+
+    with open('current_cookie.pkl', 'rb') as ff:
+        cookie = {}
+        cookie = pickle.load(ff)
+
     name = 'book'
     allowed_domains = ['wap.jjwxc.net']
-    start_urls = ['https://wap.jjwxc.net/book2/3435320?more=0&whole=1']
+    start_urls = ['https://wap.jjwxc.net/book2/3141967?more=0&whole=1']
 
-    cookie = settings['COOKIE']  # 带着Cookie向网页发请求
-
-    # 发送给服务器的http头信息，有的网站需要伪装出浏览器头进行爬取，有的则不需要
     headers = {
-        'Connection': 'keep - alive',  # 保持链接状态
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.82 Safari/537.36'
-    }
-
-    # 对请求的返回进行处理的配置
-    meta = {
-        'dont_redirect': True,  # 禁止网页重定向
-        'handle_httpstatus_list': [301, 302]  # 对哪些异常返回进行处理
+        'Connection': 'keep - alive',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) \
+        AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.98 \
+        Safari/537.36'
     }
 
     def start_requests(self):
-        yield scrapy.Request(self.start_urls[0], callback=self.parse,
-                             cookies=self.cookie,
-                             headers=self.headers, meta=self.meta)
+        # self.response_index = 1
+        return [scrapy.Request(
+            self.start_urls[0],
+            cookies=self.cookie, callback=self.parse,
+            headers=self.headers)]
 
     def parse(self, response):
         le = LinkExtractor(restrict_css='[style="text-decoration:none"]')
         for link in le.extract_links(response):
-            yield scrapy.Request(link.url, callback=self.parse_chapter)
+            yield scrapy.Request(link.url, cookies=self.cookie,
+                                 callback=self.parse_chapter)
 
     def parse_chapter(self, response):
         chapter = ChapterItem()
@@ -41,7 +42,7 @@ class BookSpider(scrapy.Spider):
 
         chapter['talk'] = (response.css(
             '[style="font-size: 12px; color: #009900;"]::text')
-            .extract_first())
+            .extract())
 
         chapter['content'] = (response.css(
             '[style="line-height: 25.2px"]::text').extract())

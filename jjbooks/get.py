@@ -13,7 +13,7 @@ def login_and_get_cookie(username, password):
     chrome_options = Options()
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--disable-gpu')
-    driver = webdriver.Chrome(chrome_options=chrome_options)
+    driver = webdriver.Chrome(options=chrome_options)
 
     driver.get('https://wap.jjwxc.net/my/login?login_mode=jjwxc')
     driver.implicitly_wait(10)
@@ -33,7 +33,7 @@ def login_and_get_cookie(username, password):
 
     driver.close()
 
-    with open('current_cookie.pkl', 'w') as ff:
+    with open('current_cookie.pkl', 'wb') as ff:
         pickle.dump(new_cookie, ff)
 
 
@@ -56,24 +56,24 @@ def output_txt_from_content_xml(input_file, output_file):
             order[item_index] = item_num
             item_num += 1
 
-    with open(output_file, 'a') as ff:
+    with open(output_file, 'a', encoding="utf-8") as ff:
         for ii in range(1, item_num):
             ff.write("\n")
             title = root.find('.//item[%d]/title' % order[str(ii)]).text
-            ff.write(title.encode("GBK") + "\n\n")
+            ff.write(title + "\n\n")
             content_list = root.findall(
                 './/item[%d]/content/value' % order[str(ii)])
             for paragraph in content_list:
                 para_content = paragraph.text
                 if para_content is not None:
                     para_content = para_content
-                    ff.write(para_content.encode("GBK") + "\n")
+                    ff.write(para_content + "\n")
             ff.write("\n")
             talk_list = root.find('.//item[%d]/talk' % order[str(ii)])
             for paragraph in talk_list:
                 para_content = paragraph.text
                 if para_content is not None:
-                    ff.write(para_content.encode("GBK") + "\n")
+                    ff.write(para_content + "\n")
             ff.write("\n")
 
 
@@ -106,18 +106,18 @@ def output_txt_from_intro_xml(input_file, output_file):
     tree = ET.parse(input_file)
     root = tree.getroot()
 
-    with open(output_file, 'w') as ff:
+    with open(output_file, 'w', encoding="utf-8") as ff:
         line = u"《" + title + u"》\n\n"
-        ff.write(line.encode("GBK"))
+        ff.write(line)
         line = u"作者：" + author + "\n\n"
-        ff.write(line.encode("GBK"))
+        ff.write(line)
         line = u"文案：\n"
-        ff.write(line.encode("GBK"))
+        ff.write(line)
         value_list = root.findall('.//item/short_intro/value')
         for value in value_list:
             line = value.text
             if line is not None:
-                ff.write(line.encode("GBK") + "\n")
+                ff.write(line + "\n")
         ff.write("\n")
 
 
@@ -131,9 +131,9 @@ def output_txt(input_file, output_file, output_type):
 
 
 def copy_template_to_spider(template, spider, mode):
-    spider_file = open(spider, mode)
+    spider_file = open(spider, mode=mode, encoding='utf-8', errors='ignore')
 
-    with open(template, 'r') as ff:
+    with open(template, 'r', encoding='utf-8', errors='ignore') as ff:
         code_buffer = ff.read()
         spider_file.write(code_buffer)
 
