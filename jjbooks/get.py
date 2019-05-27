@@ -232,8 +232,9 @@ if (__name__ == "__main__"):
     # https://wap.jjwxc.net/book2/3435320?more=0&whole=1
     # print "Book number: %s" % sys.argv[1]
     number = sys.argv[1]
+    print(os.getcwd())
 
     if len(sys.argv) == 4:
-        get_book(number, "F:\\temp", True, sys.argv[2], sys.argv[3])
+        get_book(number, os.getcwd(), True, sys.argv[2], sys.argv[3])
     else:
-        get_book(number, "F:\\temp", False, "dummy", "dummy")
+        get_book(number, os.getcwd(), False, "dummy", "dummy")
