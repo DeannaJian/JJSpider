@@ -231,10 +231,22 @@ if (__name__ == "__main__"):
     # if cookie has to be refresh, use: python get.py 3141967 username passwd
     # https://wap.jjwxc.net/book2/3435320?more=0&whole=1
     # print "Book number: %s" % sys.argv[1]
-    number = sys.argv[1]
-    print(os.getcwd())
 
-    if len(sys.argv) == 4:
-        get_book(number, os.getcwd(), True, sys.argv[2], sys.argv[3])
+    if len(sys.argv) == 5:
+        number = sys.argv[2]
+        folder = sys.argv[1]
+        get_book(number, folder, True, sys.argv[3], sys.argv[4])
+    elif len(sys.argv) == 3:
+        number = sys.argv[2]
+        folder = sys.argv[1]
+        get_book(number, folder, False, "dummy", "dummy")
     else:
-        get_book(number, os.getcwd(), False, "dummy", "dummy")
+        print('''
+usage:
+    python get.py output_folder book_number
+example:
+    python get.py "c:\\temp" 3141967
+
+if cookie has to be refresh, use:
+    python get.py 3141967 username passwd
+            ''')
