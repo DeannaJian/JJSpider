@@ -247,6 +247,8 @@ usage:
 example:
     python get.py "c:\\temp" 3141967
 
-if cookie has to be refresh, use:
-    python get.py 3141967 username passwd
+if login is required, use:
+    python get.py output_folder book_number username password
+example:
+    python get.py "c:\\temp" 3141967 XXX YYY
             ''')
