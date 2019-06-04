@@ -7,8 +7,8 @@ from .. items import ChapterItem
 class BookSpider(scrapy.Spider):
     import pickle
     import os
-	
-    cookie = {}	
+
+    cookie = {}
     if os.path.exists('current_cookie.pkl'):
         with open('current_cookie.pkl', 'rb') as ff:
             cookie = pickle.load(ff)

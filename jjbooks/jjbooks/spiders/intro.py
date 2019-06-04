@@ -10,7 +10,7 @@ from selenium.webdriver.chrome.options import Options
 class IntroSpider(scrapy.Spider):
     name = 'intro'
     allowed_domains = ['wap.jjwxc.net']
-    start_urls = ['https://wap.jjwxc.net/book2/3141967?more=0&whole=1']
+    start_urls = ['https://wap.jjwxc.net/book2/3886659?more=0&whole=1']
 
     def __init__(self):
         scrapy.Spider.__init__(self)

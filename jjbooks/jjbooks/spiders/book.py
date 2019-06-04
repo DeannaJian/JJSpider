@@ -7,15 +7,15 @@ from .. items import ChapterItem
 class BookSpider(scrapy.Spider):
     import pickle
     import os
-	
-    cookie = {}	
+
+    cookie = {}
     if os.path.exists('current_cookie.pkl'):
         with open('current_cookie.pkl', 'rb') as ff:
             cookie = pickle.load(ff)
 
     name = 'book'
     allowed_domains = ['wap.jjwxc.net']
-    start_urls = ['https://wap.jjwxc.net/book2/3141967?more=0&whole=1']
+    start_urls = ['https://wap.jjwxc.net/book2/3886659?more=0&whole=1']
 
     headers = {
         'Connection': 'keep - alive',
